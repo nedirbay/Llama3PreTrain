@@ -1,0 +1,28 @@
+# Llama 3 Pre-training Requirements
+# Python 3.10+ gerek
+
+# Core dependencies
+torch>=2.0.0
+tokenizers>=0.13.0
+datasets>=2.14.0
+transformers>=4.30.0
+
+# Training utilities
+tqdm>=4.65.0
+numpy>=1.24.0
+
+# Monitoring & Visualization
+wandb>=0.15.0
+matplotlib>=3.7.0
+tensorboard>=2.13.0
+
+# Data processing
+huggingface-hub>=0.16.0
+
+# Optional: For faster training
+# ninja>=1.11.0  # For compile mode
+# flash-attn>=2.0.0  # Flash Attention (CUDA required)
+
+# Development
+ipython>=8.12.0
+jupyter>=1.0.0
