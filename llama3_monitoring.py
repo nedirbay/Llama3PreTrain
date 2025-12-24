@@ -274,6 +274,12 @@ class ModelEvaluator:
     def generate_text(self, prompt, max_length=100, temperature=0.8, top_k=50):
         """Generate text (advanced)"""
         
+        if temperature <= 0:
+            raise ValueError("Temperature 0-dan uly bolmaly!")
+        if top_k <= 0:
+            raise ValueError("top_k 0-dan uly bolmaly!")
+
+
         self.model.eval()
         
         # Encode

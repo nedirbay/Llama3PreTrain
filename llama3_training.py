@@ -20,7 +20,12 @@ class TextDataset(Dataset):
     def __init__(self, data_path, tokenizer, max_length=512):
         self.tokenizer = tokenizer
         self.max_length = max_length
-        
+
+        if not Path(data_path).exists():
+            raise FileNotFoundError(f"Dataset tapylmady: {data_path}")
+    
+        if tokenizer is None:
+            raise ValueError("Tokenizer None bolup bilmez!")
         # Read text
         with open(data_path, 'r', encoding='utf-8') as f:
             text = f.read()
@@ -85,13 +90,14 @@ class Trainer:
         train_dataset,
         val_dataset,
         config,
-        device='cuda'
+        device='cuda', monitor=None
     ):
         self.model = model.to(device)
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
         self.config = config
         self.device = device
+        self.monitor = monitor
         
         # Resolve tokenizer (handle Subset wrapping)
         ds = train_dataset
@@ -159,6 +165,8 @@ class Trainer:
         pbar = tqdm(self.train_loader, desc=f"Epoch {epoch}")
         
         for batch_idx, input_ids in enumerate(pbar):
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
             input_ids = input_ids.to(self.device)
             
             # Forward pass
@@ -274,6 +282,15 @@ class Trainer:
             
             # Validate
             val_loss, perplexity = self.validate()
+
+            if self.monitor:
+                self.monitor.log_metrics({
+                    'train_loss': train_loss,
+                    'val_loss': val_loss,
+                    'perplexity': perplexity,
+                    'learning_rate': self.optimizer.param_groups[0]['lr'],
+                    'epoch': epoch
+                }, step=self.global_step)
             
             print(f"\nEpoch {epoch} Results:")
             print(f"  Train Loss: {train_loss:.4f}")
@@ -313,9 +330,9 @@ if __name__ == "__main__":
         'beta2': 0.95,
         'weight_decay': 0.1,
         'warmup_ratio': 0.05,
-        'batch_size': 4,
+        'batch_size': 16,
         'gradient_accumulation_steps': 4,  # Effective batch size: 16
-        'num_epochs': 10,
+        'num_epochs': 5,
         'max_grad_norm': 1.0,
         'use_amp': True,
         'save_every': 2,

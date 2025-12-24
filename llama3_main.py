@@ -11,7 +11,7 @@ from tokenizers import Tokenizer
 # Import our modules
 from llama3_architecture import LlamaModel, ModelConfig
 from llama3_training import Trainer, TextDataset
-
+from llama3_monitoring import TrainingMonitor
 
 def setup_training():
     """Setup training environment"""
@@ -111,12 +111,12 @@ def setup_training():
         'beta2': 0.95,
         'weight_decay': 0.1,
         'warmup_ratio': 0.05,
-        'batch_size': 8,
+        'batch_size': 16,
         'gradient_accumulation_steps': 2,  # Effective batch: 16
-        'num_epochs': 20,
+        'num_epochs': 5,
         'max_grad_norm': 1.0,
         'use_amp': torch.cuda.is_available(),  # Mixed precision if GPU
-        'save_every': 5,
+        'save_every': 2,
         'output_dir': 'models/checkpoints'
     }
     
@@ -165,6 +165,9 @@ def main():
     train_config = setup_result['train_config']
     device = setup_result['device']
     
+    monitor = TrainingMonitor(use_wandb=True)
+    monitor.log_model_info(model) # Model barada maglumatlary hasaba alýar
+    
     # Create trainer
     print("\n" + "=" * 70)
     print("INITIALIZING TRAINER")
@@ -175,7 +178,8 @@ def main():
         train_dataset=train_dataset,
         val_dataset=val_dataset,
         config=train_config,
-        device=device
+        device=device,
+        monitor=monitor
     )
     
     # Start training
@@ -186,6 +190,8 @@ def main():
     
     try:
         trainer.train()
+        monitor.plot_training_curves()
+        monitor.generate_report(model, setup_result['tokenizer'], device)
     except KeyboardInterrupt:
         print("\n\n[WARN] Training interrupted by user")
         print("Saving checkpoint...")

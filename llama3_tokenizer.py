@@ -43,6 +43,7 @@ class LlamaTokenizerTrainer:
             "<s>",        # Begin of sequence
             "</s>",       # End of sequence  
             "<pad>",      # Padding
+            "<|endoftext|>" # end of text
         ]
         
         # Trainer configuration
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     print("=" * 60)
     
     # Dataset path
-    data_path = "data/raw/combined_dataset.txt"
+    data_path = "data/raw/TinyStoriesV2-GPT4-train.txt"
     
     # Check dataset exists
     if not Path(data_path).exists():
